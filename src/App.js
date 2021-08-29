@@ -63,7 +63,7 @@ export function App() {
     return scopes.map(scope => ({
       scope,
       scopes,
-      name: item.properties['Name'].title[0].text.content,
+      name: item.properties['Event'].title[0].text.content,
       startDate: item.properties['Date'].date.start,
       endDate: item.properties['Date'].date.end,
       ongoing: item.properties['Ongoing']?.checkbox ?? false,
