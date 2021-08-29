@@ -1,20 +1,20 @@
 {
   "files": {
-    "main.css": "/notion-timeline-widget/static/css/main.4b836d38.chunk.css",
-    "main.js": "/notion-timeline-widget/static/js/main.a1d6aca4.chunk.js",
-    "main.js.map": "/notion-timeline-widget/static/js/main.a1d6aca4.chunk.js.map",
+    "main.css": "/notion-timeline-widget/static/css/main.d74dc9a0.chunk.css",
+    "main.js": "/notion-timeline-widget/static/js/main.12517a57.chunk.js",
+    "main.js.map": "/notion-timeline-widget/static/js/main.12517a57.chunk.js.map",
     "runtime-main.js": "/notion-timeline-widget/static/js/runtime-main.d60334e3.js",
     "runtime-main.js.map": "/notion-timeline-widget/static/js/runtime-main.d60334e3.js.map",
     "static/js/2.0927802c.chunk.js": "/notion-timeline-widget/static/js/2.0927802c.chunk.js",
     "static/js/2.0927802c.chunk.js.map": "/notion-timeline-widget/static/js/2.0927802c.chunk.js.map",
     "index.html": "/notion-timeline-widget/index.html",
-    "static/css/main.4b836d38.chunk.css.map": "/notion-timeline-widget/static/css/main.4b836d38.chunk.css.map",
+    "static/css/main.d74dc9a0.chunk.css.map": "/notion-timeline-widget/static/css/main.d74dc9a0.chunk.css.map",
     "static/js/2.0927802c.chunk.js.LICENSE.txt": "/notion-timeline-widget/static/js/2.0927802c.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.d60334e3.js",
     "static/js/2.0927802c.chunk.js",
-    "static/css/main.4b836d38.chunk.css",
-    "static/js/main.a1d6aca4.chunk.js"
+    "static/css/main.d74dc9a0.chunk.css",
+    "static/js/main.12517a57.chunk.js"
   ]
 }
