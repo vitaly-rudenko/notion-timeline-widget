@@ -11,8 +11,13 @@ body,
 
 html,
 body,
+#root,
 * {
   font-family: "Roboto", sans-serif !important;
+}
+
+#root {
+  padding: 10px;
 }
 
 .custom-icon {
@@ -28,11 +33,6 @@ body,
 .custom-icon img {
   display: block;
   margin-bottom: 1px;
-}
-
-.chart {
-  border-radius: 10px;
-  overflow: hidden;
 }
 
 .chart__tooltip {
@@ -56,6 +56,8 @@ body,
 .apexcharts-canvas {
   display: flex !important;
   justify-content: center !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
 }
 
 .apexcharts-toolbar {

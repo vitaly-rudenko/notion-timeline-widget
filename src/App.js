@@ -147,8 +147,8 @@ export function App() {
     <ApexChart
       className="chart"
       type="rangeBar"
-      width="100%"
-      height="100%"
+      width={window.innerWidth - 20}
+      height={window.innerHeight - 20}
       options={{
         chart: {
           toolbar: {
