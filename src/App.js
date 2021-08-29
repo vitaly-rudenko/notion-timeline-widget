@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import ApexChart from 'react-apexcharts'
+import copyToClipboard from 'copy-to-clipboard'
 import './App.css'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -128,10 +129,10 @@ export function App() {
                 click: () => window.location.reload()
               }, {
                 icon: `<img src="${process.env.PUBLIC_URL}/copy.svg" width="16">`,
-                class: 'custom-icon copy-url',
+                class: 'custom-icon',
                 index: 0,
                 title: 'Copy URL',
-                click: () => { },
+                click: () => copyToClipboard(window.location.href),
               }]
             }
           }
