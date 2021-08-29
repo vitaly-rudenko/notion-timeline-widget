@@ -63,3 +63,75 @@ body,
 .apexcharts-toolbar {
   right: unset !important;
 }
+
+.page {
+  width: calc(100% - 40px);
+}
+
+.page, .page * {
+  color: white;
+  font-size: 16px;
+}
+
+.title {
+  font-weight: bold;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 30px;
+}
+
+.form > *:not(:last-child) {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group > *:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+.form input,
+.result {
+  background-color: #3b4145;
+  color: white;
+  border: none;
+  outline: none;
+  padding: 10px;
+  border-radius: 10px;
+
+  transition: background-color 0.2s;
+}
+
+.form input:hover {
+  background-color: #41474b;
+}
+
+.form input:focus {
+  background-color: #2c3134;
+}
+
+.result {
+  width: 100%;
+}
+
+.button {
+  border: none;
+  background-color: white;
+  color: #2f3437;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: bold;
+
+  transition: background-color 0.1s;
+}
+
+.button:hover {
+  background-color: rgb(205, 205, 205);
+  cursor: pointer;
+}

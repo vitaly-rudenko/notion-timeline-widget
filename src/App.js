@@ -33,6 +33,7 @@ function isDatabaseItemValid(item) {
 export function App() {
   const [entries, setEntries] = useState([])
   const [isFailed, setIsFailed] = useState(false)
+  const [widgetUrl, setWidgetUrl] = useState('')
 
   const searchParams = new URLSearchParams(window.location.search)
   const databaseId = searchParams.get('database_id') || process.env.REACT_APP_TEST_DATABASE_ID
@@ -147,12 +148,46 @@ export function App() {
 
   const offset = Math.max((max - min) / 100, DAY_MS * 7)
 
+  function handleSubmit(event) {
+    event.preventDefault()
+
+    const databaseUrl = event.target.databaseUrl.value
+    const databaseId = databaseUrl.split('/').pop().split('?')[0]
+
+    const notionIntegrationToken = event.target.notionIntegrationToken.value
+
+    const widgetUrl = `https://vitaly-rudenko.github.io/notion-timeline-widget/?database_id=${databaseId}&token=${notionIntegrationToken}`
+    setWidgetUrl(widgetUrl)
+
+    copyToClipboard(widgetUrl)
+  }
+
   if (!databaseId || !token) {
-    return <div>Database ID and/or Notion token is not provided</div>
+    return <div class="page" onSubmit={handleSubmit}>
+      <form class="form">
+        <div class="form-group">
+          <label>Database URL</label>
+          <input type="text" name="databaseUrl" placeholder="https://www.notion.so/my-user/1790d3b3f05546f69989f10869398c19" />
+        </div>
+
+        <div class="form-group">
+          <label>Notion integration token</label>
+          <input type="text" name="notionIntegrationToken" placeholder="secret_DBaA6SzYK9bBcD5H7vCKS5mvJukYVsKG4CYfAcFCoRX" />
+        </div>
+
+        <div class="buttons">
+          <button type="submit" class="button">Create widget</button>
+        </div>
+      </form>
+
+      <input type="text" class="result" value={widgetUrl} placeholder="https://vitaly-rudenko.github.io/notion-timeline-widget/?database_id=1790d3b3f05546f69989f10869398c19&token=secret_DBaA6SzYK9bBcD5H7vCKS5mvJukYVsKG4CYfAcFCoRX" />
+    </div>
   }
 
   if (isFailed) {
-    return <div>The database is not supported by this widget</div>
+    return <div class="page">
+      <div class="title">The database is not supported by this widget</div>
+    </div>
   }
 
   return <>
