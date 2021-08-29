@@ -214,7 +214,7 @@ export function App() {
           max: max + offset,
         },
         legend: {
-          show: true,
+          show: false,
         },
         stroke: {
           width: 2,
