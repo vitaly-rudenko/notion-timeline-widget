@@ -172,7 +172,7 @@ export function App() {
 
         <div class="form-group">
           <label>Notion integration token</label>
-          <input type="text" name="notionIntegrationToken" placeholder="secret_DBaA6SzYK9bBcD5H7vCKS5mvJukYVsKG4CYfAcFCoRX" />
+          <input type="text" name="notionIntegrationToken" placeholder="secret_DBaA6SzYK9bBcD5H7vCKS5mvJukYVsKG4CYfAcFCoRX" defaultValue={token} />
         </div>
 
         <div class="buttons">
