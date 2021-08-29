@@ -105,6 +105,7 @@ export function App() {
 
   return <>
     <ApexChart
+      className="chart"
       type="rangeBar"
       width="100%"
       height="100%"
