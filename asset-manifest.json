@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/notion-timeline-widget/static/css/main.d74dc9a0.chunk.css",
-    "main.js": "/notion-timeline-widget/static/js/main.9d3bd23b.chunk.js",
-    "main.js.map": "/notion-timeline-widget/static/js/main.9d3bd23b.chunk.js.map",
+    "main.js": "/notion-timeline-widget/static/js/main.eb379068.chunk.js",
+    "main.js.map": "/notion-timeline-widget/static/js/main.eb379068.chunk.js.map",
     "runtime-main.js": "/notion-timeline-widget/static/js/runtime-main.d60334e3.js",
     "runtime-main.js.map": "/notion-timeline-widget/static/js/runtime-main.d60334e3.js.map",
     "static/js/2.0927802c.chunk.js": "/notion-timeline-widget/static/js/2.0927802c.chunk.js",
@@ -15,6 +15,6 @@
     "static/js/runtime-main.d60334e3.js",
     "static/js/2.0927802c.chunk.js",
     "static/css/main.d74dc9a0.chunk.css",
-    "static/js/main.9d3bd23b.chunk.js"
+    "static/js/main.eb379068.chunk.js"
   ]
 }
