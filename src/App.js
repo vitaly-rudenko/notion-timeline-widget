@@ -1,10 +1,24 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import ApexChart from 'react-apexcharts'
 import copyToClipboard from 'copy-to-clipboard'
+import Color from 'color-js'
 import './App.css'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const ALMOST_DAY_MS = DAY_MS - 1
+
+const notionColorsDark = {
+  default: '#505558',
+  gray: '#6b6f71',
+  brown: '#695c55',
+  orange: '#917448',
+  yellow: '#9f904d',
+  green: '#487871',
+  blue: '#497088',
+  purple: '#6d5a90',
+  pink: '#924d75',
+  red: '#a05d59',
+}
 
 function isDatabaseItemValid(item) {
   return (
@@ -72,7 +86,10 @@ export function App() {
       startDate: item.properties['Date'].date.start,
       endDate: item.properties['Date'].date.end,
       ongoing: item.properties['Ongoing']?.checkbox ?? false,
-      group: item.properties['Group']?.select.name ?? scope.name,
+      group: {
+        name: item.properties['Group']?.select.name ?? scope.name,
+        color: item.properties['Group']?.select.color ?? scope.color,
+      }
     }))
   }).flat(), [entries])
 
@@ -80,11 +97,11 @@ export function App() {
     const map = new Map()
 
     for (const event of events) {
-      if (map.has(event.group)) {
+      if (map.has(event.group.name)) {
         continue
       }
 
-      map.set(event.group, events.filter(e => e.group === event.group))
+      map.set(event.group.name, events.filter(e => e.group.name === event.group.name))
     }
 
     return map
@@ -96,6 +113,8 @@ export function App() {
       name,
       data: events.map(event => ({
         event,
+        fillColor: notionColorsDark[event.group.color],
+        strokeColor: Color(notionColorsDark[event.group.color]).lightenByRatio(0.5).toCSS(),
         x: event.scope.name,
         y: [
           Date.parse(event.startDate),
