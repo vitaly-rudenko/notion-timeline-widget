@@ -30,8 +30,18 @@ const notionColorsDark = {
   red: '#a05d59',
 }
 
+function isDatabaseItemValid(item) {
+  return (
+    (item.properties['Scope'].multi_select || item.properties['Scope'].select) &&
+    item.properties['Event'].title && item.properties['Event'].title[0] && item.properties['Event'].title[0].text &&
+    item.properties['Date'].date &&
+    (!item.properties['Ongoing'] || item.properties['Ongoing'].checkbox)
+  )
+}
+
 export function App() {
   const [entries, setEntries] = useState([])
+  const [isFailed, setIsFailed] = useState(false)
 
   const searchParams = new URLSearchParams(window.location.search)
   const databaseId = searchParams.get('database_id') || process.env.REACT_APP_TEST_DATABASE_ID
@@ -51,15 +61,31 @@ export function App() {
       }
     )
       .then(response => response.json())
-      .then(database => setEntries(database.results))
+      .then((database) => {
+        if (!database.results || !database.results.some(isDatabaseItemValid)) {
+          setIsFailed(true)
+          return
+        }
+
+        setEntries(database.results)
+      })
   }, [databaseId, token])
 
   const events = useMemo(() => entries.map(item => {
+    if (!isDatabaseItemValid(item)) {
+      console.log('Invalid database item:', JSON.stringify(item, null, 2))
+      return []
+    }
+
     const scopes = item.properties['Scope'].multi_select
-      .map(s => ({
+      ? item.properties['Scope'].multi_select.map(s => ({
         name: s.name,
         color: s.color,
       }))
+      : [{
+        name: item.properties['Scope'].select.name,
+        color: item.properties['Scope'].select.color,
+      }]
 
     return scopes.map(scope => ({
       scope,
@@ -102,6 +128,10 @@ export function App() {
 
   if (!databaseId || !token) {
     return <div>Database ID and/or Notion token is not provided</div>
+  }
+
+  if (isFailed) {
+    return <div>The database is not supported by this widget</div>
   }
 
   return <>
