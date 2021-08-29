@@ -6,36 +6,13 @@ import './App.css'
 const DAY_MS = 24 * 60 * 60 * 1000
 const ALMOST_DAY_MS = DAY_MS - 1
 
-const notionColorsDark = {
-  // for light mode
-  // default: '#E6E6E5',
-  // gray: '#D7D7D6',
-  // brown: '#E5D8D0',
-  // orange: '#F9E1D4',
-  // yellow: '#F9EED8',
-  // green: '#D8E8E2',
-  // blue: '#D5E4F7',
-  // purple: '#DFD4F7',
-  // pink: '#F5D5E5',
-  // red: '#FBD6D5',
-  default: '#505558',
-  gray: '#6b6f71',
-  brown: '#695c55',
-  orange: '#917448',
-  yellow: '#9f904d',
-  green: '#487871',
-  blue: '#497088',
-  purple: '#6d5a90',
-  pink: '#924d75',
-  red: '#a05d59',
-}
-
 function isDatabaseItemValid(item) {
   return (
     (item.properties['Scope'].multi_select || item.properties['Scope'].select) &&
     item.properties['Event'].title && item.properties['Event'].title[0] && item.properties['Event'].title[0].text &&
     item.properties['Date'].date &&
-    (!item.properties['Ongoing'] || item.properties['Ongoing'].checkbox)
+    (!item.properties['Ongoing'] || item.properties['Ongoing'].checkbox) &&
+    (!item.properties['Group'] || item.properties['Group'].select)
   )
 }
 
@@ -77,6 +54,7 @@ export function App() {
       return []
     }
 
+    const name = item.properties['Event'].title[0].text.content
     const scopes = item.properties['Scope'].multi_select
       ? item.properties['Scope'].multi_select.map(s => ({
         name: s.name,
@@ -90,41 +68,53 @@ export function App() {
     return scopes.map(scope => ({
       scope,
       scopes,
-      name: item.properties['Event'].title[0].text.content,
+      name,
       startDate: item.properties['Date'].date.start,
       endDate: item.properties['Date'].date.end,
       ongoing: item.properties['Ongoing']?.checkbox ?? false,
+      group: item.properties['Group']?.select.name ?? scope.name,
     }))
   }).flat(), [entries])
 
-  const scopes = useMemo(() => [...new Set(
-    events.map(event => ({
-      name: event.scope.name,
-      color: event.scope.color,
-    }))
-  )], [events])
+  const groupedEvents = useMemo(() => {
+    const map = new Map()
 
-  const chartSeries = useMemo(() => events.map(event => ({
-    name: `${event.name} (${event.scopes.map(s => s.name).join(', ')})`,
-    data: [{
-      x: event.scope.name,
-      y: [
-        Date.parse(event.startDate),
-        event.ongoing
-          ? (Date.now() + ALMOST_DAY_MS)
-          : event.endDate
-            ? (Date.parse(event.endDate) + ALMOST_DAY_MS)
-            : (Date.parse(event.startDate) + ALMOST_DAY_MS)
-      ]
-    }]
-  })), [events])
+    for (const event of events) {
+      if (map.has(event.group)) {
+        continue
+      }
+
+      map.set(event.group, events.filter(e => e.group === event.group))
+    }
+
+    return map
+  }, [events])
+
+  const chartSeries = useMemo(() => [...groupedEvents.entries()].map(([name, events]) => {
+    return {
+      events,
+      name,
+      data: events.map(event => ({
+        event,
+        x: event.scope.name,
+        y: [
+          Date.parse(event.startDate),
+          event.ongoing
+            ? (Date.now() + ALMOST_DAY_MS)
+            : event.endDate
+              ? (Date.parse(event.endDate) + ALMOST_DAY_MS)
+              : (Date.parse(event.startDate) + ALMOST_DAY_MS),
+        ]
+      }))
+    }
+  }), [groupedEvents])
 
   const [min, max] = useMemo(() => [
-    Math.min(...chartSeries.map(s => s.data[0].y[0])) || (Date.now() - DAY_MS),
-    Math.max(...chartSeries.map(s => s.data[0].y[1])) || (Date.now() + DAY_MS),
+    Math.min(...chartSeries.map(s => s.data[0].y[0])) || Date.now(),
+    Math.max(...chartSeries.map(s => s.data[0].y[1])) || Date.now(),
   ], [chartSeries])
 
-  const offset = (max - min) / 100
+  const offset = Math.max((max - min) / 100, DAY_MS * 7)
 
   if (!databaseId || !token) {
     return <div>Database ID and/or Notion token is not provided</div>
@@ -143,7 +133,6 @@ export function App() {
       options={{
         chart: {
           toolbar: {
-            offsetX: '-100%',
             tools: {
               download: false,
               selection: true,
@@ -174,15 +163,16 @@ export function App() {
         },
         dataLabels: {
           enabled: true,
-          formatter: ([startDate, endDate], info) => {
-            const days = Math.ceil((endDate - startDate) / DAY_MS)
-            const label = days + (days > 1 ? " days" : " day")
+          formatter: (_, { seriesIndex, dataPointIndex }) => {
+            const event = chartSeries[seriesIndex].data[dataPointIndex].event
 
-            const series = chartSeries[info.seriesIndex]
-            return series ? `${series.name}: ${label}` : label
+            const [startDate, endDate] = chartSeries[seriesIndex].data[dataPointIndex].y || []
+            const days = Math.ceil((endDate - startDate) / DAY_MS)
+            const duration = ' (' + days + (days > 1 ? " days" : " day") + ')'
+
+            return event.name + (event.endDate ? duration : '')
           },
         },
-        colors: scopes.map(s => notionColorsDark[s.color]),
         theme: {
           palette: 'palette1',
           mode: 'dark',
@@ -193,10 +183,38 @@ export function App() {
           max: max + offset,
         },
         legend: {
-          show: false,
+          show: true,
         },
         stroke: {
-          width: 5,
+          width: 2,
+        },
+        tooltip: {
+          custom: ({ seriesIndex, dataPointIndex }) => {
+            const event = chartSeries[seriesIndex].data[dataPointIndex].event
+
+            const [startDate, endDate] = chartSeries[seriesIndex].data[dataPointIndex].y || []
+            const days = Math.ceil((endDate - startDate) / DAY_MS)
+            const duration = ' (' + days + (days > 1 ? " days" : " day") + ')'
+
+            return `<div class="chart__tooltip">
+              <p class="chart__tooltip-primary-text">${event.name}${event.endDate ? duration : ''}</p>
+              <p class="chart__tooltip-secondary-text">${event.startDate}${event.endDate ? ` - ${event.endDate}` : ''}</p>
+            </div>`
+          }
+        },
+        grid: {
+          show: true,
+          borderColor: '#FFFFFF22',
+          xaxis: {
+            lines: {
+              show: true
+            }
+          },
+          yaxis: {
+            lines: {
+              show: true
+            }
+          },
         }
       }}
       series={chartSeries}
