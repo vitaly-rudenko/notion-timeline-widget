@@ -44,12 +44,12 @@ export function App() {
     const update = () => {
       setSize([window.innerWidth, window.innerHeight])
     }
-    
+
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
-  
+
   useEffect(() => {
     if (!databaseId || !token) return
 
@@ -108,21 +108,21 @@ export function App() {
   const groupedEvents = useMemo(() => {
     const map = new Map()
 
-    for (const event of events) {
-      if (map.has(event.group.name)) {
-        continue
-      }
+    const groupNames = [...new Set(events.map(event => event.group.name))]
 
-      map.set(event.group.name, events.filter(e => e.group.name === event.group.name))
+    for (const groupName of groupNames) {
+      const groupEvents = events.filter(e => e.group.name === groupName)
+      map.set(groupEvents[0].group, groupEvents)
     }
 
     return map
   }, [events])
 
-  const chartSeries = useMemo(() => [...groupedEvents.entries()].map(([name, events]) => {
+  const chartSeries = useMemo(() => [...groupedEvents.entries()].map(([group, events]) => {
     return {
       events,
-      name,
+      name: group.name,
+      color: Color(notionColorsDark[group.color]).lightenByRatio(0.5).saturateByRatio(2).toCSS(),
       data: events.map(event => ({
         event,
         fillColor: notionColorsDark[event.group.color],
@@ -214,7 +214,10 @@ export function App() {
           max: max + offset,
         },
         legend: {
-          show: false,
+          show: true,
+          labels: {
+            useSeriesColors: true
+          },
         },
         stroke: {
           width: 2,
@@ -228,7 +231,7 @@ export function App() {
             const duration = ' (' + days + (days > 1 ? " days" : " day") + ')'
 
             return `<div class="chart__tooltip">
-              <p class="chart__tooltip-primary-text">${event.name}${event.endDate ? duration : ''}</p>
+              <p class="chart__tooltip-primary-text">${event.group.name}: ${event.name}${event.endDate ? duration : ''}</p>
               <p class="chart__tooltip-secondary-text">${event.startDate}${event.endDate ? ` - ${event.endDate}` : ''}</p>
             </div>`
           }
