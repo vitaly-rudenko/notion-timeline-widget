@@ -37,6 +37,8 @@ export function App() {
   const token = searchParams.get('token') || process.env.REACT_APP_TEST_NOTION_INTEGRATION_TOKEN
 
   useEffect(() => {
+    if (!databaseId || !token) return
+
     fetch(
       `${process.env.REACT_APP_CORS_EVERYWHERE_URL}/https://api.notion.com/v1/databases/${databaseId}/query`,
       {
