@@ -1,156 +1,171 @@
-import React, { useMemo, useState } from 'react'
-import { DataGrid } from '@material-ui/data-grid';
-import ReactCalendarTimeline from 'react-calendar-timeline'
-import { Timeline } from 'react-svg-timeline'
-import 'react-calendar-timeline/lib/Timeline.css'
+import React, { useEffect, useState, useMemo } from 'react'
+import ApexChart from 'react-apexcharts'
+import './App.css'
 
-const exampleEvents = [{
-  date: '2021-01-01',
-  name: 'New Year',
-}, {
-  date: '2021-04-14',
-  name: 'Birthday',
-  scope: 'personal',
-}, {
-  startDate: '2021-05-17',
-  name: 'Affinidi',
-  scope: 'work',
-}, {
-  startDate: '2021-08-26',
-  endDate: '2021-08-27',
-  name: 'Hackathon',
-  scope: 'work',
-}].map((event, i) => ({ id: `${event}-${i}`, scope: 'global', ...event }))
+const DAY_MS = 24 * 60 * 60 * 1000
+const ALMOST_DAY_MS = DAY_MS - 1
 
-const COLORS = [
-  'aqua',
-  'black',
-  'red',
-  'yellow',
-  'green'
-]
-
-const columns = [{
-  field: 'name',
-  headerName: 'Name',
-  editable: true,
-  width: 200,
-}, {
-  field: 'scope',
-  headerName: 'Scope',
-  editable: true,
-  width: 200,
-}, {
-  field: 'date',
-  headerName: 'Date',
-  type: 'date',
-  editable: true,
-  width: 200,
-}, {
-  field: 'startDate',
-  headerName: 'Start Date',
-  type: 'date',
-  editable: true,
-  width: 200,
-}, {
-  field: 'endDate',
-  headerName: 'End Date',
-  type: 'date',
-  editable: true,
-  width: 200,
-}]
+const notionColorsDark = {
+  // for light mode
+  // default: '#E6E6E5',
+  // gray: '#D7D7D6',
+  // brown: '#E5D8D0',
+  // orange: '#F9E1D4',
+  // yellow: '#F9EED8',
+  // green: '#D8E8E2',
+  // blue: '#D5E4F7',
+  // purple: '#DFD4F7',
+  // pink: '#F5D5E5',
+  // red: '#FBD6D5',
+  default: '#505558',
+  gray: '#6b6f71',
+  brown: '#695c55',
+  orange: '#917448',
+  yellow: '#9f904d',
+  green: '#487871',
+  blue: '#497088',
+  purple: '#6d5a90',
+  pink: '#924d75',
+  red: '#a05d59',
+}
 
 export function App() {
-  const [events, setEvents] = useState(exampleEvents)
-    
-  const scopes = useMemo(() => [...new Set(events.map(event => event.scope))], [events])
+  const [entries, setEntries] = useState([])
 
-  const timelineLanes = useMemo(() => scopes
-    .map((scope, i) => ({
-      laneId: scope,
-      label: scope,
-      color: COLORS[i % COLORS.length],
-    })), [scopes])
+  const searchParams = new URLSearchParams(window.location.search)
+  const databaseId = searchParams.get('database_id') || process.env.REACT_APP_TEST_DATABASE_ID
+  const token = searchParams.get('token') || process.env.REACT_APP_TEST_NOTION_INTEGRATION_TOKEN
 
-  const timelineEvents = useMemo(() => events.map(event => ({
-    eventId: event.name,
-    tooltip: event.name,
-    laneId: event.scope,
-    color: timelineLanes.find(lane => lane.laneId === event.scope).color,
-    ...event.date
-      ? { startTimeMillis: Date.parse(event.date) }
-      : {
-        startTimeMillis: Date.parse(event.startDate),
-        endTimeMillis: event.endDate
-          ? Date.parse(event.endDate)
-          : Date.now(),
-      },
-  })), [events, timelineLanes])
+  useEffect(() => {
+    fetch(
+      `${process.env.REACT_APP_CORS_EVERYWHERE_URL}/https://api.notion.com/v1/databases/${databaseId}/query`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Notion-Version': '2021-08-16',
+        }
+      }
+    )
+      .then(response => response.json())
+      .then(database => setEntries(database.results))
+  }, [databaseId, token])
 
-  const timelineGroups = useMemo(() => scopes.map(scope => ({
-    id: scope,
-    title: scope,
-  })), [scopes])
+  const events = useMemo(() => entries.map(item => {
+    const scopes = item.properties['Scope'].multi_select
+      .map(s => ({
+        name: s.name,
+        color: s.color,
+      }))
 
-  const timelineItems = useMemo(() => events.map(event => ({
-    id: event.name,
-    group: event.scope,
-    ...event.date
-      ? { start_time: new Date(event.date), end_time: new Date(Date.parse(event.date) + 24 * 60 * 60 * 1000) }
-      : {
-        start_time: new Date(event.startDate),
-        end_time: event.endDate
-          ? new Date(event.endDate)
-          : new Date(),
-      },
+    return scopes.map(scope => ({
+      scope,
+      scopes,
+      name: item.properties['Name'].title[0].text.content,
+      startDate: item.properties['Date'].date.start,
+      endDate: item.properties['Date'].date.end,
+      ongoing: item.properties['Ongoing']?.checkbox ?? false,
+    }))
+  }).flat(), [entries])
+
+  const scopes = useMemo(() => [...new Set(
+    events.map(event => ({
+      name: event.scope.name,
+      color: event.scope.color,
+    }))
+  )], [events])
+
+  const chartSeries = useMemo(() => events.map(event => ({
+    name: `${event.name} (${event.scopes.map(s => s.name).join(', ')})`,
+    data: [{
+      x: event.scope.name,
+      y: [
+        Date.parse(event.startDate),
+        event.ongoing
+          ? (Date.now() + ALMOST_DAY_MS)
+          : event.endDate
+            ? (Date.parse(event.endDate) + ALMOST_DAY_MS)
+            : (Date.parse(event.startDate) + ALMOST_DAY_MS)
+      ]
+    }]
   })), [events])
 
-  return <>
-    <div style={{ height: 400, width: '100%' }}>
-      <DataGrid
-        rows={events}
-        columns={columns}
-        onCellEditCommit={(params) => {
-          const index = events.findIndex(event => event.id === params.id)
-          const event = events[index]
-          const updatedEvents = [...events]
-          updatedEvents.splice(index, 1, { ...event, [params.field]: params.value })
+  const [min, max] = useMemo(() => [
+    Math.min(...chartSeries.map(s => s.data[0].y[0])) || (Date.now() - DAY_MS),
+    Math.max(...chartSeries.map(s => s.data[0].y[1])) || (Date.now() + DAY_MS),
+  ], [chartSeries])
 
-          setEvents(updatedEvents)
-        }}
-      />
-    </div>
-    <Timeline
-      width={window.innerWidth}
-      height={400}
-      events={timelineEvents}
-      lanes={timelineLanes}
-      trimRange={[
-        Math.min(...events.map(e => Date.parse(e.date || e.startDate || e.endDate))),
-        Math.max(...events.map(e => Date.parse(e.endDate || e.startDate || e.date))),
-      ]}
-      dateFormat={ms => new Date(ms).toLocaleString()}
-    />
-    <br/>
-    <ReactCalendarTimeline
-      groups={timelineGroups}
-      items={timelineItems}
-      minZoom={365.24 * 86400 * 1000}
-      maxZoom={365.24 * 86400 * 1000}
-      timeSteps={{
-        day: 0,
-        hour: 0,
-        month: 1,
-        second: 0,
-        minute: 0,
-        year: 1,
+  const offset = (max - min) / 100
+
+  if (!databaseId || !token) {
+    return <div>Database ID and/or Notion token is not provided</div>
+  }
+
+  return <>
+    <ApexChart
+      type="rangeBar"
+      width="100%"
+      height="100%"
+      options={{
+        chart: {
+          toolbar: {
+            offsetX: '-100%',
+            tools: {
+              download: false,
+              selection: true,
+              zoom: true,
+              zoomin: true,
+              zoomout: true,
+              pan: true,
+              customIcons: [{
+                icon: `<img src="${process.env.PUBLIC_URL}/reload.svg" width="16">`,
+                class: 'custom-icon',
+                index: 0,
+                title: 'Reload',
+                click: () => window.location.reload()
+              }, {
+                icon: `<img src="${process.env.PUBLIC_URL}/copy.svg" width="16">`,
+                class: 'custom-icon copy-url',
+                index: 0,
+                title: 'Copy URL',
+                click: () => { },
+              }]
+            }
+          }
+        },
+        plotOptions: {
+          bar: {
+            horizontal: true,
+          },
+        },
+        dataLabels: {
+          enabled: true,
+          formatter: ([startDate, endDate], info) => {
+            const days = Math.ceil((endDate - startDate) / DAY_MS)
+            const label = days + (days > 1 ? " days" : " day")
+
+            const series = chartSeries[info.seriesIndex]
+            return series ? `${series.name}: ${label}` : label
+          },
+        },
+        colors: scopes.map(s => notionColorsDark[s.color]),
+        theme: {
+          palette: 'palette1',
+          mode: 'dark',
+        },
+        xaxis: {
+          type: "datetime",
+          min: min - offset,
+          max: max + offset,
+        },
+        legend: {
+          show: false,
+        },
+        stroke: {
+          width: 5,
+        }
       }}
-      defaultTimeStart={new Date(
-        Math.min(...timelineItems.map(e => e.start_time.getTime())) - 24 * 60 * 60 * 1000
-      )}
-      defaultTimeEnd={
-        new Date(Math.max(...timelineItems.map(e => e.end_time.getTime())) + 24 * 60 * 60 * 1000
-      )}
+      series={chartSeries}
     />
   </>;
 }

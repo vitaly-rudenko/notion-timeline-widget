@@ -1,26 +1,21 @@
 {
-  "name": "story-planner",
-  "version": "0.1.0",
+  "name": "notion-timeline-widget",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@material-ui/core": "^4.12.3",
-    "@material-ui/data-grid": "^4.0.0-alpha.37",
-    "@testing-library/jest-dom": "^5.14.1",
-    "@testing-library/react": "^11.2.7",
-    "@testing-library/user-event": "^12.8.3",
-    "interactjs": "^1.10.11",
+    "apexcharts": "^3.28.1",
     "react": "^17.0.2",
-    "react-calendar-timeline": "^0.27.0",
+    "react-apexcharts": "^1.3.9",
     "react-dom": "^17.0.2",
-    "react-scripts": "4.0.3",
-    "react-svg-timeline": "^0.16.5",
-    "web-vitals": "^1.1.2"
+    "react-scripts": "4.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -39,5 +34,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "homepage": "https://vitaly-rudenko.github.io/notion-timeline-widget/",
+  "devDependencies": {
+    "gh-pages": "^3.2.3"
   }
 }
