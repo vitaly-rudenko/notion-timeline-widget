@@ -38,6 +38,18 @@ export function App() {
   const databaseId = searchParams.get('database_id') || process.env.REACT_APP_TEST_DATABASE_ID
   const token = searchParams.get('token') || process.env.REACT_APP_TEST_NOTION_INTEGRATION_TOKEN
 
+  const [[width, height], setSize] = useState([800, 300])
+
+  useEffect(() => {
+    const update = () => {
+      setSize([window.innerWidth, window.innerHeight])
+    }
+    
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+  
   useEffect(() => {
     if (!databaseId || !token) return
 
@@ -147,8 +159,8 @@ export function App() {
     <ApexChart
       className="chart"
       type="rangeBar"
-      width={window.innerWidth - 20}
-      height={window.innerHeight - 20}
+      width={width - 20}
+      height={height - 20}
       options={{
         chart: {
           toolbar: {
