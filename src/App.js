@@ -34,6 +34,7 @@ export function App() {
   const [entries, setEntries] = useState([])
   const [isFailed, setIsFailed] = useState(false)
   const [widgetUrl, setWidgetUrl] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
   const searchParams = new URLSearchParams(window.location.search)
   const databaseId = searchParams.get('database_id') || process.env.REACT_APP_TEST_DATABASE_ID
@@ -53,6 +54,7 @@ export function App() {
 
   useEffect(() => {
     if (!databaseId || !token) return
+    setIsLoading(true)
 
     fetch(
       `${process.env.REACT_APP_CORS_EVERYWHERE_URL}/https://api.notion.com/v1/databases/${databaseId}/query`,
@@ -73,6 +75,7 @@ export function App() {
 
         setEntries(database.results)
       })
+      .finally(() => setIsLoading(false))
   }, [databaseId, token])
 
   const events = useMemo(() => entries.map(item => {
@@ -163,30 +166,36 @@ export function App() {
   }
 
   if (!databaseId || !token) {
-    return <div class="page" onSubmit={handleSubmit}>
-      <form class="form">
-        <div class="form-group">
+    return <div className="page" onSubmit={handleSubmit}>
+      <form className="form">
+        <div className="form-group">
           <label>Database URL</label>
           <input type="text" name="databaseUrl" placeholder="https://www.notion.so/my-user/1790d3b3f05546f69989f10869398c19" />
         </div>
 
-        <div class="form-group">
+        <div className="form-group">
           <label>Notion integration token</label>
           <input type="text" name="notionIntegrationToken" placeholder="secret_DBaA6SzYK9bBcD5H7vCKS5mvJukYVsKG4CYfAcFCoRX" defaultValue={token} />
         </div>
 
-        <div class="buttons">
-          <button type="submit" class="button">Create widget</button>
+        <div className="buttons">
+          <button type="submit" className="button">Create widget</button>
         </div>
       </form>
 
-      <input type="text" class="result" value={widgetUrl} placeholder="https://vitaly-rudenko.github.io/notion-timeline-widget/?database_id=1790d3b3f05546f69989f10869398c19&token=secret_DBaA6SzYK9bBcD5H7vCKS5mvJukYVsKG4CYfAcFCoRX" />
+      <input type="text" className="result" value={widgetUrl} placeholder="https://vitaly-rudenko.github.io/notion-timeline-widget/?database_id=1790d3b3f05546f69989f10869398c19&token=secret_DBaA6SzYK9bBcD5H7vCKS5mvJukYVsKG4CYfAcFCoRX" />
     </div>
   }
 
   if (isFailed) {
-    return <div class="page">
-      <div class="title">The database is not supported by this widget</div>
+    return <div className="page">
+      <div className="title">The database is not supported by this widget</div>
+    </div>
+  }
+
+  if (isLoading) {
+    return <div className="page">
+      <div className="title">Loading...</div>
     </div>
   }
 
